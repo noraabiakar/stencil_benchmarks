@@ -1,6 +1,5 @@
 #include "knl/knl_vadv_variant_ik_blocked_j.h"
 #include <thread>
-#include <iostream>
 
 namespace platform {
 
@@ -76,28 +75,11 @@ namespace platform {
                                 ccol[idx] = -1;
                                 dcol[idx] = -1;
                                 datacol[idx] = -1;
-                                //std::cout << ustage[idx] << " " << upos[idx] << " " << utens[idx] << " " << utensstage[idx] << " " << vstage[idx] << " " << vpos[idx] << " " << vtens[idx] << " " << vtensstage[idx] << " " << wstage[idx] << " " << wpos[idx] << " " << wtens[idx] << " " << wtensstage[idx] << " " << wcon[idx] << std::endl;
-                                /*ustage[idx] = 4.0;
-                                upos[idx] = 4.0;
-                                utens[idx] = 2.3;
-                                utensstage[idx] = 20.3;
-                                vstage[idx] = 1.5;
-                                vpos[idx] = 3.3;
-                                vtens[idx] = 7.3;
-                                vtensstage[idx] = 18.4;
-                                wstage[idx] = 0.3;
-                                wpos[idx] = 0.7;
-                                wtens[idx] = 2.3;
-                                wtensstage[idx] = 0.3;
-                                wcon[idx] = 0;
-                                ccol[idx] = -1;
-                                dcol[idx] = -1;
-                                datacol[idx] = -1;*/
                             }
                         }
                     }
                 }
-            }  
+            }
         }
 
         template <class ValueType>
@@ -135,7 +117,7 @@ namespace platform {
                 int thread_id = omp_get_thread_num();
                 value_type *__restrict__ ccol_cache = m_ccol_cache.data() + thread_id * m_iblocksize * m_jblocksize;
                 value_type *__restrict__ dcol_cache = m_dcol_cache.data() + thread_id * m_iblocksize * m_jblocksize;
-#pragma omp for collapse(2) schedule (static, 1) nowait 
+#pragma omp for collapse(2) schedule (static, 1) nowait
                 for (int jb = 0; jb < jsize; jb += m_jblocksize) {
                     for (int ib = 0; ib < isize; ib += m_iblocksize) {
                         const int imax = ib + m_iblocksize <= isize ? ib + m_iblocksize : isize;
