@@ -27,6 +27,7 @@ namespace platform {
             }
 
             void hdiff() override;
+            void prerun_init() override;
 
           private:
             int m_iblocksize, m_jblocksize;

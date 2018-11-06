@@ -21,6 +21,7 @@ namespace platform {
         std::vector<std::string> stencil_list() const override;
 
         void prerun() override;
+        void prerun_init() override;
 
         virtual void hdiff() = 0;
 
@@ -54,7 +55,10 @@ namespace platform {
     hdiff_stencil_variant<Platform, ValueType>::hdiff_stencil_variant(const arguments_map &args)
         : variant_base(args), m_in(storage_size()), m_coeff(storage_size()), m_lap(storage_size()),
           m_flx(storage_size()), m_fly(storage_size()), m_out(storage_size()), m_lap_ref(storage_size()),
-          m_flx_ref(storage_size()), m_fly_ref(storage_size()), m_out_ref(storage_size()) {
+          m_flx_ref(storage_size()), m_fly_ref(storage_size()), m_out_ref(storage_size()) {}
+
+    template <class Platform, class ValueType>
+    void hdiff_stencil_variant<Platform, ValueType>::prerun_init() {
 #pragma omp parallel
         {
             std::minstd_rand eng;

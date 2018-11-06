@@ -7,6 +7,66 @@ namespace platform {
         using clock = std::chrono::high_resolution_clock;
 
         template <class ValueType>
+        void hdiff_variant_ij_private_blocks<ValueType>::prerun_init() {
+#pragma omp parallel
+        {
+            value_type *__restrict__ in = this->in();
+            value_type *__restrict__ coeff = this->coeff();
+
+            constexpr int istride = 1;
+            const int jstride = this->jstride();
+            const int kstride = this->kstride();
+            const int isize = this->isize();
+            const int jsize = this->jsize();
+            const int ksize = this->ksize();
+
+            double dx = 1. / (double)(isize);
+            double dy = 1. / (double)(jsize);
+            double dz = 1. / (double)(ksize);
+
+#pragma omp parallel
+            {
+#pragma omp for collapse(3)
+                for (int jb = 0; jb < jsize; jb += m_jblocksize) {
+                    for (int k = 0; k < ksize; ++k) {
+                        for (int ib = 0; ib < isize; ib += m_iblocksize) {
+                            const int i_blocksize_out = ib + m_iblocksize <= isize ? m_iblocksize : isize - ib;
+                            const int j_blocksize_out = jb + m_jblocksize <= jsize ? m_jblocksize : jsize - jb;
+
+                            int thread_id = omp_get_thread_num();
+                            int index = ib * istride + jb * jstride + k * kstride;
+                            for (int j = 0; j < j_blocksize_out; ++j) {
+                                int j_base = j * i_blocksize_out;
+                                index = index - j_base;
+#pragma omp simd
+                                for (int i = j_base; i < j_base + i_blocksize_out; ++i) {
+                                    int z_q = index + i / kstride;
+                                    int z_r = index + i % kstride;
+                                    int y_q = z_r / jstride;
+                                    int y_r = z_r % jstride;
+                                    int x_q = y_r;
+                                    double x = dx * (double)(x_q);
+                                    double y = dy * (double)(y_q);
+                                    double z = dz * (double)(z_q);
+                                    in[i] = 3.0 +
+                                              1.25 * (2.5 + cos(M_PI * (18.4 * x + 20.3 * y)) +
+                                                         0.78 * sin(2 * M_PI * (18.4 * x + 20.3 * y) * z)) /
+                                                  4.;
+                                    coeff[i] =
+                                        1.4 +
+                                        0.87 * (0.3 + cos(M_PI * (1.4 * x + 2.3 * y)) + 1.11 * sin(2 * M_PI * (1.4 * x + 2.3 * y) * z)) /
+                                            4.;
+                                }
+                                index += (jstride + j_base);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+        template <class ValueType>
         void hdiff_variant_ij_private_blocks<ValueType>::hdiff() {
             const value_type *__restrict__ in = this->in();
             const value_type *__restrict__ coeff = this->coeff();
